@@ -1,0 +1,25 @@
+name: minha_doenca_crohn
+description: "A new Flutter project."
+version: 1.0.0+1
+environment:
+  sdk: ^3.8.1
+dependencies:
+  
+  mobx: ^2.3.0
+  flutter_mobx: ^2.1.0
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_localizations:
+    sdk: flutter
+  sqflite: ^2.3.3
+  path: ^1.9.0
+  flutter_modular: ^6.4.1
+
+dev_dependencies:
+  build_runner: ^2.4.9
+  mobx_codegen: ^2.4.0
+  flutter_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
