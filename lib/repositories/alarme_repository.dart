@@ -1,27 +1,23 @@
-import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
 import '../models/alarme.dart';
 
 class AlarmeRepository {
-  Future<void> removerAlarme(int id) async {
-    final db = await _db;
-    await db.delete('alarmes', where: 'id = ?', whereArgs: [id]);
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  Future<int> inserirAlarme(Alarme alarme) async {
+    return await _dbHelper.insert('alarmes', alarme.toMap());
   }
 
-  Future<Database> get _db async => await DatabaseHelper().db;
-
-  Future<void> insertAlarme(Alarme alarme) async {
-    final db = await _db;
-    await db.insert(
-      'alarmes',
-      alarme.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<List<Alarme>> listarAlarmes() async {
+    final lista = await _dbHelper.list('alarmes');
+    return lista.map((e) => Alarme.fromMap(e)).toList();
   }
 
-  Future<List<Alarme>> getAlarmes() async {
-    final db = await _db;
-    final maps = await db.query('alarmes');
-    return maps.map((e) => Alarme.fromMap(e)).toList();
+  Future<int> atualizarAlarme(Alarme alarme) async {
+    return await _dbHelper.update('alarmes', alarme.toMap());
+  }
+
+  Future<int> deletarAlarme(int id) async {
+    return await _dbHelper.delete('alarmes', id);
   }
 }

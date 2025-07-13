@@ -1,8 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -56,136 +54,42 @@ class DatabaseHelper {
     ''');
   }
 
-  // CRUD para alarmes
-  Future<int> inserirAlarme(Map<String, dynamic> alarme) async {
+  // Funções CRUD genéricas
+  Future<int> insert(String table, Map<String, dynamic> data) async {
     final dbClient = await db;
-    return await dbClient.insert('alarmes', alarme);
+    return await dbClient.insert(table, data);
   }
 
-  Future<List<Map<String, dynamic>>> listarAlarmes() async {
+  Future<Map<String, dynamic>?> find(String table, int id) async {
     final dbClient = await db;
-    return await dbClient.query('alarmes');
+    final result = await dbClient.query(
+      table,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
   }
 
-  Future<int> atualizarAlarme(Map<String, dynamic> alarme) async {
+  Future<List<Map<String, dynamic>>> list(String table) async {
+    final dbClient = await db;
+    return await dbClient.query(table);
+  }
+
+  Future<int> update(String table, Map<String, dynamic> data) async {
     final dbClient = await db;
     return await dbClient.update(
-      'alarmes',
-      alarme,
+      table,
+      data,
       where: 'id = ?',
-      whereArgs: [alarme['id']],
+      whereArgs: [data['id']],
     );
   }
 
-  Future<int> deletarAlarme(int id) async {
+  Future<int> delete(String table, int id) async {
     final dbClient = await db;
-    return await dbClient.delete('alarmes', where: 'id = ?', whereArgs: [id]);
-  }
-
-  // CRUD para remédios
-  Future<int> inserirRemedio(Map<String, dynamic> remedio) async {
-    final dbClient = await db;
-    // Serializa campos complexos, convertendo tipos não suportados
-    final safeRemedio = Map<String, dynamic>.from(remedio);
-
-    // Garante que tipoCor seja sempre salvo como int (valor da cor)
-    if (safeRemedio['tipoCor'] != null) {
-      if (safeRemedio['tipoCor'] is Color) {
-        safeRemedio['tipoCor'] = (safeRemedio['tipoCor'] as Color).value;
-      } else if (safeRemedio['tipoCor'] is int) {
-        // já está correto
-      } else if (safeRemedio['tipoCor'] is String) {
-        // tenta converter string hexadecimal para int
-        try {
-          String corStr = safeRemedio['tipoCor'];
-          if (corStr.startsWith('#')) {
-            corStr = corStr.replaceFirst('#', '0xff');
-            safeRemedio['tipoCor'] = int.parse(corStr);
-          } else {
-            safeRemedio['tipoCor'] = int.parse(corStr);
-          }
-        } catch (_) {
-          safeRemedio['tipoCor'] = const Color(0xFFB000B5).value;
-        }
-      } else {
-        safeRemedio['tipoCor'] = const Color(0xFFB000B5).value;
-      }
-    } else {
-      safeRemedio['tipoCor'] = const Color(0xFFB000B5).value;
-    }
-
-    // Converte DateTime para String
-    if (safeRemedio['dataInicio'] != null &&
-        safeRemedio['dataInicio'] is DateTime) {
-      final dt = safeRemedio['dataInicio'] as DateTime;
-      safeRemedio['dataInicio'] = dt.toIso8601String();
-    }
-    // Garante que horarios seja List<String>
-    if (safeRemedio['horarios'] != null &&
-        safeRemedio['horarios'] is! List<String>) {
-      try {
-        safeRemedio['horarios'] = List<String>.from(safeRemedio['horarios']);
-      } catch (_) {
-        safeRemedio['horarios'] = <String>[];
-      }
-    }
-    final data = {
-      'nome': safeRemedio['nome'] ?? '',
-      'dosagem': safeRemedio['dose'] ?? safeRemedio['dosagem'] ?? '',
-      'detalhes': jsonEncode(safeRemedio),
-    };
-    return await dbClient.insert('remedios', data);
-  }
-
-  Future<List<Map<String, dynamic>>> listarRemedios() async {
-    final dbClient = await db;
-    final lista = await dbClient.query('remedios');
-    return lista.map((item) {
-      final detalhes = item['detalhes'] as String?;
-      Map<String, dynamic> extras = {};
-      if (detalhes != null && detalhes.isNotEmpty) {
-        try {
-          extras = jsonDecode(detalhes);
-        } catch (_) {
-          extras = {};
-        }
-      }
-      // Garante tipos e valores padrão para todos os campos usados na tela
-      final tipoCor = (extras['tipoCor'] is int)
-          ? Color(extras['tipoCor'])
-          : (extras['tipoCor'] is Color)
-          ? extras['tipoCor']
-          : const Color(0xFFB000B5);
-      final horarios = (extras['horarios'] is List)
-          ? List<String>.from(extras['horarios'].map((e) => e.toString()))
-          : <String>[];
-      return {
-        'id': item['id'],
-        'nome': item['nome'] ?? '',
-        'tipo': extras['tipo'] ?? 'Outro',
-        'tipoCor': tipoCor,
-        'dose': item['dosagem'] ?? extras['dose'] ?? '',
-        'medico': extras['medico'] ?? '',
-        'horarios': horarios,
-        'observacao': extras['observacao'] ?? '',
-        'quantidade': extras['quantidade'] ?? '',
-        'observacaoFinal': extras['observacaoFinal'] ?? '',
-      };
-    }).toList();
-  }
-
-  Future<int> atualizarRemedio(Map<String, dynamic> remedio) async {
-    final dbClient = await db;
-    return await dbClient.update(
-      'remedios',
-      remedio,
-      where: 'id = ?',
-      whereArgs: [remedio['id']],
-    );
-  }
-
-  Future<int> deletarRemedio(int id) async {
-    final dbClient = await db;
-    return await dbClient.delete('remedios', where: 'id = ?', whereArgs: [id]);
+    return await dbClient.delete(table, where: 'id = ?', whereArgs: [id]);
   }
 }

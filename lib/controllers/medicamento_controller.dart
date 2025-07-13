@@ -10,6 +10,11 @@ class MedicamentoController = _MedicamentoControllerBase
 abstract class _MedicamentoControllerBase with Store {
   final MedicamentoService _service = MedicamentoService();
 
+  @action
+  Future<void> init() async {
+    await carregarMedicamentos();
+  }
+
   @observable
   List<Medicamento> medicamentos = [];
 

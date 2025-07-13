@@ -8,8 +8,13 @@ class AlarmeController = _AlarmeControllerBase with _$AlarmeController;
 
 abstract class _AlarmeControllerBase with Store {
   @action
+  Future<void> init() async {
+    await carregarAlarmes();
+  }
+
+  @action
   Future<void> removerAlarme(int id) async {
-    await _repo.removerAlarme(id);
+    await _repo.deletarAlarme(id);
     await carregarAlarmes();
   }
 
@@ -24,14 +29,14 @@ abstract class _AlarmeControllerBase with Store {
   @action
   Future<void> carregarAlarmes() async {
     isLoading = true;
-    final lista = await _repo.getAlarmes();
+    final lista = await _repo.listarAlarmes();
     alarmes = ObservableList.of(lista);
     isLoading = false;
   }
 
   @action
   Future<void> cadastrarAlarme(Alarme alarme) async {
-    await _repo.insertAlarme(alarme);
+    await _repo.inserirAlarme(alarme);
     await carregarAlarmes();
   }
 }

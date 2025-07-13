@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+import 'package:minha_doenca_crohn/controllers/alarme_controller.dart';
+import 'package:minha_doenca_crohn/controllers/medicamento_controller.dart';
 import '../stores/dashboard_store.dart';
 import 'alarmes_page.dart';
 import 'remedios_page.dart';
@@ -16,6 +19,17 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    try {
+      final alarmeController = Modular.get<AlarmeController>();
+      final medicamentoController = Modular.get<MedicamentoController>();
+      alarmeController.init();
+      medicamentoController.init();
+    } catch (_) {}
+  }
+
   int _selectedTab = 0;
 
   @override
