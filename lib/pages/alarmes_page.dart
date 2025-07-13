@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import '../stores/dashboard_store.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+import '../controllers/alarme_controller.dart';
+import 'criar_alarme_page.dart';
 
-class AlarmesPage extends StatelessWidget {
-  final DashboardStore store;
-  const AlarmesPage({super.key, required this.store});
+class AlarmesPage extends StatefulWidget {
+  AlarmesPage({super.key});
+
+  @override
+  State<AlarmesPage> createState() => _AlarmesPageState();
+}
+
+class _AlarmesPageState extends State<AlarmesPage> {
+  final AlarmeController controller = Modular.get<AlarmeController>();
+
+  @override
+  void initState() {
+    super.initState();
+    controller.carregarAlarmes();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +34,7 @@ class AlarmesPage extends StatelessWidget {
                   child: const Text(
                     'Alarmes',
                     style: TextStyle(
-                      fontSize: 24, // alterado para 24px
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -41,7 +55,13 @@ class AlarmesPage extends StatelessWidget {
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                 ),
                 child: ElevatedButton.icon(
-                  onPressed: () => () {},
+                  onPressed: () async {
+                    // Abre a página de cadastro e recarrega alarmes ao voltar
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => CriarAlarmePage()),
+                    );
+                    controller.carregarAlarmes();
+                  },
                   icon: const Icon(Icons.alarm, color: Colors.white, size: 20),
                   label: const Text(
                     'Cadastrar Alarme',
@@ -70,242 +90,293 @@ class AlarmesPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Expanded(child: _buildAlarmesList()),
+        Expanded(child: _buildAlarmesList(controller)),
       ],
     );
-    // ...removido bloco duplicado...
   }
 
-  Widget _buildProgress() {
+  Widget _buildAlarmesList(AlarmeController controller) {
+    final diasLabels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
     return Observer(
-      builder: (_) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            // Remove o border padrão e usa um gradient border
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.transparent, width: 0.1),
-              gradient: const LinearGradient(
-                colors: [
-                  Color.fromARGB(255, 194, 221, 255),
-                  Color.fromARGB(255, 125, 181, 249),
-                  Color.fromARGB(255, 74, 153, 255),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+      builder: (_) {
+        if (controller.alarmes.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.alarm_off, size: 48, color: Color(0xFF7B8FA1)),
+                const SizedBox(height: 16),
+                const Text(
+                  'Nenhum alarme cadastrado',
+                  style: TextStyle(fontSize: 16, color: Color(0xFF7B8FA1)),
+                ),
+              ],
             ),
-            padding: const EdgeInsets.all(2), // largura da borda
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: controller.alarmes.length,
+          itemBuilder: (context, index) {
+            final alarme = controller.alarmes[index];
+            return Card(
+              color: alarme.ativo ? Colors.white : const Color(0xFFF3F7FF),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: alarme.ativo
+                      ? const Color(0xFF0052D4).withOpacity(0.3)
+                      : const Color(0xFFB0B0B0).withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Progresso de Hoje',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        '${(store.progresso * 100).toInt()}%',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: store.progresso,
-                      backgroundColor: Colors.grey[100],
-                      color: const Color.fromARGB(255, 80, 192, 0),
-                      minHeight: 8,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Continue assim!',
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlarmesList() {
-    // Mock para dias da semana
-    String diasSemanaMock(int index) {
-      const dias = [
-        'SEG TER QUA',
-        'QUI SEX',
-        'SAB DOM',
-        'SEG QUA SEX',
-        'TER QUI',
-        'DOM',
-        'SEG TER QUA QUI SEX SAB DOM',
-      ];
-      return dias[index % dias.length];
-    }
-
-    return Observer(
-      builder: (_) => ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: store.alarmes.length,
-        itemBuilder: (context, index) {
-          final alarme = store.alarmes[index];
-          return Card(
-            color: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: const Color(0xFF0052D4).withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 18,
+                  horizontal: 18,
+                ),
+                child: Opacity(
+                  opacity: alarme.ativo ? 1.0 : 0.5,
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Azatioprina',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF3A4750),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              alarme.hora,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF232323),
-                                letterSpacing: 2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                       Row(
-                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Switch(
-                            value: alarme.ativo,
-                            onChanged: (v) => store.marcarComoAtivo(index, v),
-                            activeColor: const Color(0xFF0052D4),
-                            activeTrackColor: const Color(0xFF6FB1FC),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: Color(0xFF7B8FA1),
-                              size: 20,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  alarme.nomeMedicamento,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF3A4750),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  alarme.hora,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF232323),
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ],
                             ),
-                            onPressed: () {},
-                            tooltip: 'Excluir',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Switch(
+                                value: alarme.ativo,
+                                onChanged: (v) {},
+                                activeColor: const Color(0xFF0052D4),
+                                activeTrackColor: const Color(0xFF6FB1FC),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Color(0xFF7B8FA1),
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      titlePadding: const EdgeInsets.fromLTRB(
+                                        24,
+                                        24,
+                                        24,
+                                        0,
+                                      ),
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                        24,
+                                        12,
+                                        24,
+                                        0,
+                                      ),
+                                      actionsPadding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        8,
+                                        16,
+                                        16,
+                                      ),
+                                      title: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.red,
+                                            size: 26,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Confirmar Exclusão',
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      content: const Text(
+                                        'Deseja realmente deletar este item? Esta ação não pode ser desfeita.',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      actions: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            TextButton(
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(false),
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: Colors.black,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 22,
+                                                      vertical: 10,
+                                                    ),
+                                                textStyle: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                backgroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  side: const BorderSide(
+                                                    color: Colors.black12,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: const Text('Cancelar'),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            ElevatedButton.icon(
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(true),
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                              label: const Text('Sim, Deletar'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                                foregroundColor: Colors.white,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 18,
+                                                      vertical: 10,
+                                                    ),
+                                                textStyle: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true && alarme.id != null) {
+                                    await controller.removerAlarme(alarme.id!);
+                                  }
+                                },
+                                tooltip: 'Excluir',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: List.generate(alarme.dias.length, (i) {
+                          final ativo = alarme.dias[i];
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              gradient: ativo
+                                  ? const LinearGradient(
+                                      colors: [
+                                        Color(0xFF0052D4),
+                                        Color(0xFF4364F7),
+                                        Color(0xFF6FB1FC),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
+                              color: ativo ? null : const Color(0xFFF3F7FF),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              diasLabels[i],
+                              style: TextStyle(
+                                color: ativo
+                                    ? Colors.white
+                                    : const Color(0xFF7B8FA1),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.volume_up,
+                            size: 18,
+                            color: Color(0xFF7B8FA1),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            alarme.som,
+                            style: const TextStyle(
+                              color: Color(0xFF7B8FA1),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: List.generate(7, (i) {
-                      // DSTQQSS
-                      final dias = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-                      final ativo = i < 3; // mock: 3 dias ativos
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          gradient: ativo
-                              ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFF0052D4),
-                                    Color(0xFF4364F7),
-                                    Color(0xFF6FB1FC),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : null,
-                          color: ativo ? null : const Color(0xFFF3F7FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          dias[i],
-                          style: TextStyle(
-                            color: ativo
-                                ? Colors.white
-                                : const Color(0xFF7B8FA1),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: const [
-                      Icon(Icons.volume_up, size: 18, color: Color(0xFF7B8FA1)),
-                      SizedBox(width: 6),
-                      Text(
-                        'Beep Clássico',
-                        style: TextStyle(
-                          color: Color(0xFF7B8FA1),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
