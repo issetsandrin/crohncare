@@ -33,7 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
               builder: (context) {
                 switch (_selectedTab) {
                   case 0:
-                    return AlarmesPage(store: widget.store);
+                    return AlarmesPage();
                   case 1:
                     return RemediosPage();
                   case 2:

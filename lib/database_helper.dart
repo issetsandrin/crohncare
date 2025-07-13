@@ -38,10 +38,12 @@ class DatabaseHelper {
       CREATE TABLE alarmes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT,
+        dosagem TEXT,
         horario TEXT,
         dias TEXT,
         ativo INTEGER,
-        remedio TEXT
+        remedio TEXT,
+        som TEXT
       )
     ''');
     await db.execute('''

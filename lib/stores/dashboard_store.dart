@@ -9,36 +9,7 @@ abstract class _DashboardStore with Store {
   double progresso = 0;
 
   @observable
-  ObservableList<Alarme> alarmes = ObservableList.of([
-    Alarme(
-      hora: "06:00",
-      nome: "Azatioprina",
-      dose: "1g",
-      tomado: false,
-      ativo: true,
-    ),
-    Alarme(
-      hora: "10:00",
-      nome: "Prednisona",
-      dose: "200mg",
-      tomado: false,
-      ativo: true,
-    ),
-    Alarme(
-      hora: "12:00",
-      nome: "Ibuprofeno",
-      dose: "400mg",
-      tomado: false,
-      ativo: true,
-    ),
-    Alarme(
-      hora: "16:00",
-      nome: "Mesalazina",
-      dose: "1g",
-      tomado: false,
-      ativo: true,
-    ),
-  ]);
+  ObservableList<Alarme> alarmes = ObservableList<Alarme>();
 
   @action
   void marcarComoTomado(int index) {
