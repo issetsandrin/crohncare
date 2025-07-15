@@ -225,6 +225,16 @@ mixin _$MedicamentoController on _MedicamentoControllerBase, Store {
     });
   }
 
+  late final _$initAsyncAction = AsyncAction(
+    '_MedicamentoControllerBase.init',
+    context: context,
+  );
+
+  @override
+  Future<void> init() {
+    return _$initAsyncAction.run(() => super.init());
+  }
+
   late final _$carregarMedicamentosAsyncAction = AsyncAction(
     '_MedicamentoControllerBase.carregarMedicamentos',
     context: context,

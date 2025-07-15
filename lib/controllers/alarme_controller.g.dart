@@ -45,6 +45,26 @@ mixin _$AlarmeController on _AlarmeControllerBase, Store {
     });
   }
 
+  late final _$initAsyncAction = AsyncAction(
+    '_AlarmeControllerBase.init',
+    context: context,
+  );
+
+  @override
+  Future<void> init() {
+    return _$initAsyncAction.run(() => super.init());
+  }
+
+  late final _$removerAlarmeAsyncAction = AsyncAction(
+    '_AlarmeControllerBase.removerAlarme',
+    context: context,
+  );
+
+  @override
+  Future<void> removerAlarme(int id) {
+    return _$removerAlarmeAsyncAction.run(() => super.removerAlarme(id));
+  }
+
   late final _$carregarAlarmesAsyncAction = AsyncAction(
     '_AlarmeControllerBase.carregarAlarmes',
     context: context,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:minha_doenca_crohn/controllers/alarme_controller.dart';
 import '../models/alarme.dart';
@@ -12,6 +13,179 @@ class CriarAlarmePage extends StatefulWidget {
 }
 
 class _CriarAlarmePageState extends State<CriarAlarmePage> {
+  Future<void> _showCustomTimePicker() async {
+    int selectedHour = _hora.hour;
+    int selectedMinute = _hora.minute;
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: 320,
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+              const Text(
+                'Selecione o horário',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 28),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 80,
+                      child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: selectedHour,
+                        ),
+                        itemExtent: 50,
+                        onSelectedItemChanged: (value) {
+                          selectedHour = value;
+                        },
+                        children: List.generate(
+                          24,
+                          (i) => Center(
+                            child: Text(
+                              i.toString().padLeft(2, '0'),
+                              style: const TextStyle(
+                                fontSize: 33,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      ':',
+                      style: TextStyle(
+                        fontSize: 33,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: selectedMinute,
+                        ),
+                        itemExtent: 50,
+                        onSelectedItemChanged: (value) {
+                          selectedMinute = value;
+                        },
+                        children: List.generate(
+                          60,
+                          (i) => Center(
+                            child: Text(
+                              i.toString().padLeft(2, '0'),
+                              style: const TextStyle(
+                                fontSize: 33,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 45,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                              color: Color(0xFF0052D4),
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(
+                              color: Color(0xFF0052D4),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 45,
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF0052D4),
+                                Color(0xFF4364F7),
+                                Color(0xFF6FB1FC),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _hora = TimeOfDay(
+                                  hour: selectedHour,
+                                  minute: selectedMinute,
+                                );
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Alterar',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   AlarmeController controller = Modular.get<AlarmeController>();
 
   TimeOfDay _hora = const TimeOfDay(hour: 6, minute: 0);
@@ -67,97 +241,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                         children: [
                           const SizedBox(height: 100),
                           GestureDetector(
-                            onTap: () async {
-                              final picked = await showTimePicker(
-                                context: context,
-                                initialTime: _hora,
-                                builder: (context, child) {
-                                  return Theme(
-                                    data: Theme.of(context).copyWith(
-                                      colorScheme: const ColorScheme.light(
-                                        primary: Color(
-                                          0xFF0052D4,
-                                        ), // azul principal
-                                        onPrimary:
-                                            Colors.white, // texto em botões
-                                        surface:
-                                            Colors.white, // fundo do dialog
-                                        onSurface: Color(
-                                          0xFF0052D4,
-                                        ), // texto dos números
-                                        secondary: Color(0xFF4364F7),
-                                      ),
-                                      dialogBackgroundColor: Colors.white,
-                                      timePickerTheme: TimePickerThemeData(
-                                        backgroundColor: Colors.white,
-                                        hourMinuteColor:
-                                            MaterialStateColor.resolveWith(
-                                              (states) =>
-                                                  const Color(0xFFE3EDFB),
-                                            ),
-                                        hourMinuteTextColor:
-                                            MaterialStateColor.resolveWith(
-                                              (states) =>
-                                                  const Color(0xFF0052D4),
-                                            ),
-                                        dayPeriodColor:
-                                            MaterialStateColor.resolveWith(
-                                              (states) =>
-                                                  const Color(0xFFE3EDFB),
-                                            ),
-                                        dayPeriodTextColor:
-                                            MaterialStateColor.resolveWith(
-                                              (states) =>
-                                                  const Color(0xFF0052D4),
-                                            ),
-                                        dialHandColor: const Color(0xFF0052D4),
-                                        dialBackgroundColor: const Color(
-                                          0xFFF5F8FE,
-                                        ),
-                                        entryModeIconColor: const Color(
-                                          0xFF0052D4,
-                                        ),
-                                        helpTextStyle: const TextStyle(
-                                          color: Color(0xFF0052D4),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        hourMinuteShape:
-                                            const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(8),
-                                              ),
-                                            ),
-                                        dayPeriodShape:
-                                            const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(8),
-                                              ),
-                                            ),
-                                        cancelButtonStyle: TextButton.styleFrom(
-                                          foregroundColor: const Color(
-                                            0xFF0052D4,
-                                          ),
-                                        ),
-                                        confirmButtonStyle:
-                                            TextButton.styleFrom(
-                                              foregroundColor: const Color(
-                                                0xFF0052D4,
-                                              ),
-                                            ),
-                                      ),
-                                    ),
-                                    child: child!,
-                                  );
-                                },
-                              );
-                              if (picked != null)
-                                setState(() => _hora = picked);
-                            },
+                            onTap: _showCustomTimePicker,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -262,7 +346,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                               child: Icon(
                                 Icons.notifications_none,
                                 color: Color(0xFF4D7CFE),
-                                size: 22,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -271,7 +355,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                             'Repetir nos dias',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 16,
                             ),
                           ),
                         ],
@@ -282,7 +366,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                           final labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
                           final bool selected = _diasSelecionados[i];
                           return Padding(
-                            padding: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.only(right: 6),
                             child: GestureDetector(
                               onTap: () => setState(
                                 () => _diasSelecionados[i] = !selected,
@@ -290,7 +374,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 180),
                                 width: 40,
-                                height: 38,
+                                height: 35,
                                 decoration: BoxDecoration(
                                   gradient: selected
                                       ? const LinearGradient(
@@ -306,7 +390,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                                   color: selected
                                       ? null
                                       : const Color.fromARGB(65, 211, 211, 211),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: const Color.fromARGB(
                                       123,
@@ -314,14 +398,14 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                                       255,
                                       255,
                                     ),
-                                    width: 1.3,
+                                    width: 1.0,
                                   ),
                                   boxShadow: [
                                     if (!selected)
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 1),
                                       ),
                                   ],
                                 ),
@@ -333,7 +417,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                                         ? Colors.white
                                         : const Color(0xFF222B45),
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 16,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
@@ -386,7 +470,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                               child: Icon(
                                 Icons.medication,
                                 color: Color(0xFF2ECC8B),
-                                size: 22,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -395,7 +479,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                             'Medicamento',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 16,
                             ),
                           ),
                         ],
@@ -539,7 +623,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                               child: Icon(
                                 Icons.volume_up,
                                 color: Color(0xFF9B51E0),
-                                size: 22,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -548,7 +632,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                             'Som do Alarme',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 15,
                             ),
                           ),
                         ],
@@ -734,7 +818,7 @@ class _CriarAlarmePageState extends State<CriarAlarmePage> {
                             'Alarme Ativo',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 16,
                             ),
                           ),
                         ],

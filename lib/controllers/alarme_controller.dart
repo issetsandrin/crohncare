@@ -1,3 +1,4 @@
+import 'package:minha_doenca_crohn/services/set_alarme_service.dart';
 import 'package:mobx/mobx.dart';
 import '../models/alarme.dart';
 import '../repositories/alarme_repository.dart';
@@ -19,6 +20,7 @@ abstract class _AlarmeControllerBase with Store {
   }
 
   final AlarmeRepository _repo = AlarmeRepository();
+  final SetAlarmeService _alarm = SetAlarmeService();
 
   @observable
   ObservableList<Alarme> alarmes = ObservableList<Alarme>();
@@ -37,6 +39,7 @@ abstract class _AlarmeControllerBase with Store {
   @action
   Future<void> cadastrarAlarme(Alarme alarme) async {
     await _repo.inserirAlarme(alarme);
+    _alarm.setAlarme(alarme);
     await carregarAlarmes();
   }
 }
